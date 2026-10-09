@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Editor</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+
+        body {
+            background: #1e1e2f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main application window */
+        .app-container {
+            width: 1400px;
+            max-width: 100%;
+            height: 90vh;
+            background: #2a2a3c;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3e3e55;
+        }
+
+        /* Top toolbar */
+        .toolbar {
+            background: #1f1f2b;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #37374a;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 16px;
+            color: #e0e0ff;
+            font-weight: 600;
+            font-size: 1.15rem;
+            letter-spacing: 0.5px;
+        }
+
+        .logo i {
+            color: #6c8cff;
+            font-size: 1.7rem;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #2a2a3c;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #3e3e55;
+        }
+
+        .tool-btn {
+            background: transparent;
+            border: none;
+            color: #b0b0d0;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            background: #3a3a52;
+            color: #ffffff;
+        }
+
+        .tool-btn.active {
+            background: #5a6cff;
+            color: white;
+            box-shadow: 0 4px 12px rgba(90, 108, 255, 0.3);
+        }
+
+        .tool-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* View mode toggle */
+        .view-toggle {
+            display: flex;
+            background: #2a2a3c;
+            border-radius: 10px;
+            border: 1px solid #3e3e55;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: #b0b0d0;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-btn:hover {
+            background: #3a3a52;
+            color: white;
+        }
+
+        .view-btn.active {
+            background: #5a6cff;
+            color: white;
+            box-shadow: 0 4px 12px rgba(90, 108, 255, 0.3);
+        }
+
+        /* Action buttons */
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .action-btn {
+            background: #2a2a3c;
+            border: 1px solid #3e3e55;
+            color: #c0c0e0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #35354a;
+            color: white;
+            border-color: #5a6cff;
+        }
+
+        .action-btn.primary {
+            background: #5a6cff;
+            color: white;
+            border-color: #5a6cff;
+            box-shadow: 0 4px 12px rgba(90, 108, 255, 0.3);
+        }
+
+        .action-btn.primary:hover {
+            background: #4a5ae0;
+            transform: scale(1.02);
+        }
+
+        /* Main editor area */
+        .editor-wrapper {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Code editor panel */
+        .code-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e2a;
+            border-right: 1px solid #37374a;
+            overflow: hidden;
+            min-width: 200px;
+        }
+
+        .panel-header {
+            background: #1a1a24;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2e2e40;
+            font-size: 0.8rem;
+            color: #9a9ab8;
+        }
+
+        .panel-header .label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .panel-header .label i {
+            color: #6c8cff;
+        }
+
+        .panel-header .line-count {
+            font-size: 0.75rem;
+            color: #6a6a8a;
+        }
+
+        /* Code area with line numbers */
+        .code-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .line-numbers {
+            background: #1a1a24;
+            color: #5a5a7a;
+            padding: 16px 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            text-align: right;
+            user-select: none;
+            overflow: hidden;
+            min-width: 50px;
+            border-right: 1px solid #2e2e40;
+        }
+
+        .line-numbers span {
+            display: block;
+        }
+
+        #codeEditor {
+            flex: 1;
+            background: #1e1e2a;
+            color: #d4d4e8;
+            border: none;
+            outline: none;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: none;
+            tab-size: 2;
+            overflow: auto;
+            white-space: pre;
+            scrollbar-width: thin;
+            scrollbar-color: #5a6cff #1e1e2a;
+        }
+
+        #codeEditor::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #codeEditor::-webkit-scrollbar-track {
+            background: #1e1e2a;
+        }
+
+        #codeEditor::-webkit-scrollbar-thumb {
+            background: #5a6cff;
+            border-radius: 10px;
+        }
+
+        /* Preview panel */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            overflow: hidden;
+            min-width: 200px;
+        }
+
+        .preview-header {
+            background: #1a1a24;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2e2e40;
+            font-size: 0.8rem;
+            color: #9a9ab8;
+        }
+
+        .preview-header .label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .preview-header .label i {
+            color: #6c8cff;
+        }
+
+        .preview-header .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+        }
+
+        .preview-header .status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .preview-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            background: white;
+        }
+
+        /* Resizer */
+        .resizer {
+            width: 6px;
+            background: #2a2a3c;
+            cursor: col-resize;
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .resizer:hover, .resizer.active {
+            background: #5a6cff;
+        }
+
+        .resizer::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 3px;
+            height: 40px;
+            background: #5a5a7a;
+            border-radius: 3px;
+        }
+
+        .resizer:hover::before, .resizer.active::before {
+            background: #ffffff;
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: #1a1a24;
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #9a9ab8;
+            font-size: 0.85rem;
+            border-top: 1px solid #2e2e40;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-badge {
+            background: #2a2a3c;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #b0b0d0;
+            border: 1px solid #3e3e55;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge i {
+            color: #6c8cff;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.8rem;
+        }
+
+        /* Tooltip */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a24;
+            color: #e0e0ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid #3e3e55;
+            z-index: 100;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+        }
+
+        /* Divider */
+        .divider {
+            width: 1px;
+            height: 28px;
+            background: #3e3e55;
+            margin: 0 4px;
+        }
+
+        /* Code snippets dropdown */
+        .snippets-dropdown {
+            position: relative;
+        }
+
+        .snippets-btn {
+            background: #2a2a3c;
+            border: 1px solid #3e3e55;
+            color: #c0c0e0;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .snippets-btn:hover {
+            background: #35354a;
+            color: white;
+            border-color: #5a6cff;
+        }
+
+        .snippets-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            background: #2a2a3c;
+            border: 1px solid #3e3e55;
+            border-radius: 8px;
+            padding: 6px;
+            min-width: 200px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .snippets-menu.active {
+            display: block;
+        }
+
+        .snippet-item {
+            padding: 8px 12px;
+            color: #c0c0e0;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .snippet-item:hover {
+            background: #3a3a52;
+            color: white;
+        }
+
+        .snippet-item i {
+            color: #6c8cff;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .view-btn span {
+                display: none;
+            }
+            .action-btn span {
+                display: none;
+            }
+            .action-btn {
+                padding: 8px 12px;
+            }
+            .logo span {
+                display: none;
+            }
+            .snippets-btn span {
+                display: none;
+            }
+        }
+
+        /* Fullscreen mode */
+        .app-container.fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            max-width: none;
+        }
+
+        /* Hidden panel */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <span>HTMLForge</span>
+            </div>
+
+            <!-- Code snippets -->
+            <div class="snippets-dropdown">
+                <button class="snippets-btn" id="snippetsBtn">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <span>Snippets</span>
+                    <i class="fas fa-caret-down" style="font-size: 0.7rem;"></i>
+                </button>
+                <div class="snippets-menu" id="snippetsMenu">
+                    <div class="snippet-item" data-snippet="html5"><i class="fas fa-file-code"></i> HTML5 Boilerplate</div>
+                    <div class="snippet-item" data-snippet="flexbox"><i class="fas fa-arrows-alt-h"></i> Flexbox Layout</div>
+                    <div class="snippet-item" data-snippet="grid"><i class="fas fa-th"></i> CSS Grid Layout</div>
+                    <div class="snippet-item" data-snippet="form"><i class="fas fa-edit"></i> Contact Form</div>
+                    <div class="snippet-item" data-snippet="button"><i class="fas fa-hand-pointer"></i> Styled Button</div>
+                    <div class="snippet-item" data-snippet="card"><i class="fas fa-id-card"></i> Card Component</div>
+                    <div class="snippet-item" data-snippet="nav"><i class="fas fa-bars"></i> Navigation Bar</div>
+                    <div class="snippet-item" data-snippet="table"><i class="fas fa-table"></i> Responsive Table</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Undo / Redo -->
+            <div class="tool-group">
+                <button class="tool-btn" id="undoBtn" data-tooltip="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+                <button class="tool-btn" id="redoBtn" data-tooltip="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Formatting -->
+            <div class="tool-group">
+                <button class="tool-btn" id="formatBtn" data-tooltip="Format code (Ctrl+Shift+F)"><i class="fas fa-align-left"></i></button>
+                <button class="tool-btn" id="clearCodeBtn" data-tooltip="Clear editor"><i class="fas fa-trash-alt"></i></button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- View modes -->
+            <div class="view-toggle">
+                <button class="view-btn active" id="splitViewBtn" data-view="split">
+                    <i class="fas fa-columns"></i><span>Split</span>
+                </button>
+                <button class="view-btn" id="codeViewBtn" data-view="code">
+                    <i class="fas fa-code"></i><span>Code</span>
+                </button>
+                <button class="view-btn" id="previewViewBtn" data-view="preview">
+                    <i class="fas fa-eye"></i><span>Preview</span>
+                </button>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="action-group">
+                <button class="action-btn" id="fullscreenBtn" data-tooltip="Toggle fullscreen">
+                    <i class="fas fa-expand"></i><span>Fullscreen</span>
+                </button>
+                <button class="action-btn" id="downloadBtn" data-tooltip="Download HTML file">
+                    <i class="fas fa-download"></i><span>Download</span>
+                </button>
+                <button class="action-btn primary" id="runBtn" data-tooltip="Run code (Ctrl+Enter)">
+                    <i class="fas fa-play"></i><span>Run</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main editor area -->
+        <div class="editor-wrapper" id="editorWrapper">
+            <!-- Code panel -->
+            <div class="code-panel" id="codePanel">
+                <div class="panel-header">
+                    <div class="label">
+                        <i class="fas fa-file-code"></i>
+                        <span>index.html</span>
+                    </div>
+                    <div class="line-count" id="lineCount">1 line</div>
+                </div>
+                <div class="code-area">
+                    <div class="line-numbers" id="lineNumbers">
+                        <span>1</span>
+                    </div>
+                    <textarea id="codeEditor" spellcheck="false" placeholder="Write your HTML, CSS, and JavaScript here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Resizer -->
+            <div class="resizer" id="resizer"></div>
+
+            <!-- Preview panel -->
+            <div class="preview-panel" id="previewPanel">
+                <div class="preview-header">
+                    <div class="label">
+                        <i class="fas fa-eye"></i>
+                        <span>Live Preview</span>
+                    </div>
+                    <div class="status">
+                        <span class="dot"></span>
+                        <span id="previewStatus">Ready</span>
+                    </div>
+                </div>
+                <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-modals allow-forms allow-popups allow-same-origin"></iframe>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="status-badge"><i class="fas fa-file-code"></i> <span id="fileStatus">Untitled.html</span></span>
+                <span class="status-badge"><i class="fas fa-text-width"></i> <span id="charCount">0 chars</span></span>
+                <span class="status-badge"><i class="fas fa-list-ol"></i> <span id="lineCount2">1 line</span></span>
+            </div>
+            <div class="status-right">
+                <span><i class="fas fa-bolt" style="color: #6c8cff;"></i> Auto-run on</span>
+                <span id="cursorPos">Ln 1, Col 1</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ----- DOM elements -----
+            const appContainer = document.getElementById('appContainer');
+            const codeEditor = document.getElementById('codeEditor');
+            const previewFrame = document.getElementById('previewFrame');
+            const lineNumbers = document.getElementById('lineNumbers');
+            const lineCount = document.getElementById('lineCount');
+            const lineCount2 = document.getElementById('lineCount2');
+            const charCount = document.getElementById('charCount');
+            const cursorPos = document.getElementById('cursorPos');
+            const previewStatus = document.getElementById('previewStatus');
+            const fileStatus = document.getElementById('fileStatus');
+
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const formatBtn = document.getElementById('formatBtn');
+            const clearCodeBtn = document.getElementById('clearCodeBtn');
+            const runBtn = document.getElementById('runBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+            const splitViewBtn = document.getElementById('splitViewBtn');
+            const codeViewBtn = document.getElementById('codeViewBtn');
+            const previewViewBtn = document.getElementById('previewViewBtn');
+
+            const codePanel = document.getElementById('codePanel');
+            const previewPanel = document.getElementById('previewPanel');
+            const resizer = document.getElementById('resizer');
+            const editorWrapper = document.getElementById('editorWrapper');
+
+            const snippetsBtn = document.getElementById('snippetsBtn');
+            const snippetsMenu = document.getElementById('snippetsMenu');
+
+            // ----- State -----
+            let currentView = 'split';
+            let isResizing = false;
+            let autoRun = true;
+            let autoRunTimeout = null;
+            let history = [];
+            let historyIndex = -1;
+            let isUndoRedo = false;
+
+            // Default content
+            const defaultContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 2rem;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Hello, World!</h1>
+        <p>Edit the code on the left to see your changes live in the preview.</p>
+        <button onclick="alert('Welcome to HTMLForge!')">Click Me</button>
+    </div>
+</body>
+</html>`;
+
+            // ----- Snippets -----
+            const snippets = {
+                html5: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Hello World</h1>
+</body>
+</html>`,
+                flexbox: `<div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 40px; background: #f0f0f8;">
+    <div style="flex: 1; padding: 20px; background: #667eea; color: white; border-radius: 8px;">Item 1</div>
+    <div style="flex: 1; padding: 20px; background: #764ba2; color: white; border-radius: 8px;">Item 2</div>
+    <div style="flex: 1; padding: 20px; background: #f093fb; color: white; border-radius: 8px;">Item 3</div>
+</div>`,
+                grid: `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 40px; background: #f0f0f8;">
+    <div style="padding: 30px; background: #667eea; color: white; border-radius: 8px; text-align: center;">Cell 1</div>
+    <div style="padding: 30px; background: #764ba2; color: white; border-radius: 8px; text-align: center;">Cell 2</div>
+    <div style="padding: 30px; background: #f093fb; color: white; border-radius: 8px; text-align: center;">Cell 3</div>
+    <div style="padding: 30px; background: #4facfe; color: white; border-radius: 8px; text-align: center;">Cell 4</div>
+    <div style="padding: 30px; background: #43e97b; color: white; border-radius: 8px; text-align: center;">Cell 5</div>
+    <div style="padding: 30px; background: #fa709a; color: white; border-radius: 8px; text-align: center;">Cell 6</div>
+</div>`,
+                form: `<form style="max-width: 400px; margin: 40px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); font-family: sans-serif;">
+    <h2 style="margin-bottom: 20px; color: #333;">Contact Us</h2>
+    <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 6px; color: #555; font-size: 0.9rem;">Name</label>
+        <input type="text" placeholder="Your name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    </div>
+    <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 6px; color: #555; font-size: 0.9rem;">Email</label>
+        <input type="email" placeholder="you@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    </div>
+    <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 6px; color: #555; font-size: 0.9rem;">Message</label>
+        <textarea placeholder="Your message" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; resize: vertical;"></textarea>
+    </div>
+    <button type="submit" style="width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer;">Send Message</button>
+</form>`,
+                button: `<button style="padding: 14px 32px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s;">
+    Get Started
+</button>`,
+                card: `<div style="max-width: 320px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: sans-serif;">
+    <div style="height: 160px; background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+    <div style="padding: 24px;">
+        <h3 style="margin: 0 0 8px; color: #333;">Card Title</h3>
+        <p style="margin: 0 0 16px; color: #666; line-height: 1.5; font-size: 0.9rem;">This is a sample card component with a gradient header and some descriptive text.</p>
+        <button style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Learn More</button>
+    </div>
+</div>`,
+                nav: `<nav style="display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: sans-serif;">
+    <div style="font-size: 1.3rem; font-weight: 700; color: #667eea;">Brand</div>
+    <div style="display: flex; gap: 24px;">
+        <a href="#" style="color: #555; text-decoration: none; font-weight: 500;">Home</a>
+        <a href="#" style="color: #555; text-decoration: none; font-weight: 500;">About</a>
+        <a href="#" style="color: #555; text-decoration: none; font-weight: 500;">Services</a>
+        <a href="#" style="color: #555; text-decoration: none; font-weight: 500;">Contact</a>
+    </div>
+    <button style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Sign Up</button>
+</nav>`,
+                table: `<table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
+    <thead>
+        <tr style="background: #667eea; color: white;">
+            <th style="padding: 14px 20px; text-align: left;">Name</th>
+            <th style="padding: 14px 20px; text-align: left;">Email</th>
+            <th style="padding: 14px 20px; text-align: left;">Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px 20px;">John Doe</td>
+            <td style="padding: 12px 20px;">john@example.com</td>
+            <td style="padding: 12px 20px;">Developer</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee; background: #f9f9fc;">
+            <td style="padding: 12px 20px;">Jane Smith</td>
+            <td style="padding: 12px 20px;">jane@example.com</td>
+            <td style="padding: 12px 20px;">Designer</td>
+        </tr>
+        <tr>
+            <td style="padding: 12px 20px;">Bob Johnson</td>
+            <td style="padding: 12px 20px;">bob@example.com</td>
+            <td style="padding: 12px 20px;">Manager</td>
+        </tr>
+    </tbody>
+</table>`
+            };
+
+            // ----- Initialize -----
+            function init() {
+                codeEditor.value = defaultContent;
+                updateLineNumbers();
+                updateCounts();
+                runPreview();
+                saveHistory();
+                updateCursorPos();
+            }
+
+            // ----- Line numbers -----
+            function updateLineNumbers() {
+                const lines = codeEditor.value.split('\n').length;
+                let html = '';
+                for (let i = 1; i <= lines; i++) {
+                    html += `<span>${i}</span>`;
+                }
+                lineNumbers.innerHTML = html;
+                lineCount.innerText = lines + (lines === 1 ? ' line' : ' lines');
+                lineCount2.innerText = lines + (lines === 1 ? ' line' : ' lines');
+            }
+
+            // ----- Counts -----
+            function updateCounts() {
+                const text = codeEditor.value;
+                charCount.innerText = text.length + ' chars';
+            }
+
+            // ----- Cursor position -----
+            function updateCursorPos() {
+                const pos = codeEditor.selectionStart;
+                const text = codeEditor.value.substring(0, pos);
+                const lines = text.split('\n');
+                const line = lines.length;
+                const col = lines[lines.length - 1].length + 1;
+                cursorPos.innerText = `Ln ${line}, Col ${col}`;
+            }
+
+            // ----- Preview -----
+            function runPreview() {
+                const code = codeEditor.value;
+                previewStatus.innerText = 'Rendering...';
+                
+                const iframe = previewFrame;
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write(code);
+                doc.close();
+                
+                setTimeout(() => {
+                    previewStatus.innerText = 'Ready';
+                }, 100);
+            }
+
+            // ----- Auto-run -----
+            function scheduleAutoRun() {
+                if (!autoRun) return;
+                if (autoRunTimeout) clearTimeout(autoRunTimeout);
+                autoRunTimeout = setTimeout(() => {
+                    runPreview();
+                }, 500);
+            }
+
+            // ----- History (Undo/Redo) -----
+            function saveHistory() {
+                if (isUndoRedo) return;
+                const current = codeEditor.value;
+                if (history[historyIndex] === current) return;
+                
+                history = history.slice(0, historyIndex + 1);
+                history.push(current);
+                if (history.length > 100) history.shift();
+                historyIndex = history.length - 1;
+                updateUndoRedoButtons();
+            }
+
+            function updateUndoRedoButtons() {
+                undoBtn.disabled = historyIndex <= 0;
+                redoBtn.disabled = historyIndex >= history.length - 1;
+            }
+
+            // ----- Format code -----
+            function formatCode() {
+                let code = codeEditor.value;
+                // Simple indentation formatter
+                let formatted = '';
+                let indent = 0;
+                const lines = code.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) {
+                        formatted += '\n';
+                        continue;
+                    }
+                    
+                    // Decrease indent for closing tags
+                    if (line.startsWith('</')) {
+                        indent = Math.max(0, indent - 1);
+                    }
+                    
+                    formatted += '  '.repeat(indent) + line + '\n';
+                    
+                    // Increase indent for opening tags (not self-closing, not closing)
+                    if (line.startsWith('<') && 
+                        !line.startsWith('</') && 
+                        !line.startsWith('<!') && 
+                        !line.endsWith('/>') && 
+                        !line.includes('</') &&
+                        !line.match(/<(br|hr|img|input|meta|link|area|base|col|embed|source|track|wbr)/i)) {
+                        indent++;
+                    }
+                    
+                    // Decrease indent for closing tags on same line
+                    if (line.startsWith('</')) {
+                        // Already handled
+                    }
+                }
+                
+                codeEditor.value = formatted.trim();
+                updateLineNumbers();
+                updateCounts();
+                saveHistory();
+                runPreview();
+            }
+
+            // ----- View modes -----
+            function setView(mode) {
+                currentView = mode;
+                
+                splitViewBtn.classList.toggle('active', mode === 'split');
+                codeViewBtn.classList.toggle('active', mode === 'code');
+                previewViewBtn.classList.toggle('active', mode === 'preview');
+                
+                if (mode === 'split') {
+                    codePanel.classList.remove('hidden');
+                    previewPanel.classList.remove('hidden');
+                    resizer.classList.remove('hidden');
+                    codePanel.style.flex = '1';
+                    previewPanel.style.flex = '1';
+                } else if (mode === 'code') {
+                    codePanel.classList.remove('hidden');
+                    previewPanel.classList.add('hidden');
+                    resizer.classList.add('hidden');
+                    codePanel.style.flex = '1';
+                } else if (mode === 'preview') {
+                    codePanel.classList.add('hidden');
+                    previewPanel.classList.remove('hidden');
+                    resizer.classList.add('hidden');
+                    previewPanel.style.flex = '1';
+                }
+            }
+
+            // ----- Resizer -----
+            function initResizer() {
+                resizer.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    resizer.classList.add('active');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+                    
+                    const wrapperRect = editorWrapper.getBoundingClientRect();
+                    const offsetX = e.clientX - wrapperRect.left;
+                    const percentage = (offsetX / wrapperRect.width) * 100;
+                    
+                    const clampedPercentage = Math.min(Math.max(percentage, 20), 80);
+                    
+                    codePanel.style.flex = `0 0 ${clampedPercentage}%`;
+                    previewPanel.style.flex = `0 0 ${100 - clampedPercentage}%`;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        resizer.classList.remove('active');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                    }
+                });
+            }
+
+            // ----- Event Listeners -----
+            codeEditor.addEventListener('input', () => {
+                updateLineNumbers();
+                updateCounts();
+                scheduleAutoRun();
+                updateCursorPos();
+                saveHistory();
+            });
+
+            codeEditor.addEventListener('keyup', updateCursorPos);
+            codeEditor.addEventListener('click', updateCursorPos);
+
+            codeEditor.addEventListener('keydown', (e) => {
+                // Tab support
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = codeEditor.selectionStart;
+                    const end = codeEditor.selectionEnd;
+                    codeEditor.value = codeEditor.value.substring(0, start) + '  ' + codeEditor.value.substring(end);
+                    codeEditor.selectionStart = codeEditor.selectionEnd = start + 2;
+                    updateLineNumbers();
+                    updateCounts();
+                    saveHistory();
+                }
+                
+                // Ctrl+Enter to run
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runPreview();
+                }
+                
+                // Ctrl+Z / Ctrl+Y
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    undo();
+                }
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                    e.preventDefault();
+                    redo();
+                }
+                
+                // Ctrl+Shift+F to format
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+                    e.preventDefault();
+                    formatCode();
+                }
+            });
+
+            // Undo / Redo
+            function undo() {
+                if (historyIndex > 0) {
+                    isUndoRedo = true;
+                    historyIndex--;
+                    codeEditor.value = history[historyIndex];
+                    updateLineNumbers();
+                    updateCounts();
+                    updateUndoRedoButtons();
+                    runPreview();
+                    isUndoRedo = false;
+                }
+            }
+
+            function redo() {
+                if (historyIndex < history.length - 1) {
+                    isUndoRedo = true;
+                    historyIndex++;
+                    codeEditor.value = history[historyIndex];
+                    updateLineNumbers();
+                    updateCounts();
+                    updateUndoRedoButtons();
+                    runPreview();
+                    isUndoRedo = false;
+                }
+            }
+
+            undoBtn.addEventListener('click', undo);
+            redoBtn.addEventListener('click', redo);
+
+            // Format
+            formatBtn.addEventListener('click', formatCode);
+
+            // Clear
+            clearCodeBtn.addEventListener('click', () => {
+                if (codeEditor.value.trim() && !confirm('Clear the editor? This cannot be undone easily.')) {
+                    return;
+                }
+                codeEditor.value = '';
+                updateLineNumbers();
+                updateCounts();
+                saveHistory();
+                runPreview();
+            });
+
+            // Run
+            runBtn.addEventListener('click', runPreview);
+
+            // Download
+            downloadBtn.addEventListener('click', () => {
+                const blob = new Blob([codeEditor.value], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // Fullscreen
+            fullscreenBtn.addEventListener('click', () => {
+                appContainer.classList.toggle('fullscreen');
+                const icon = fullscreenBtn.querySelector('i');
+                if (appContainer.classList.contains('fullscreen')) {
+                    icon.className = 'fas fa-compress';
+                } else {
+                    icon.className = 'fas fa-expand';
+                }
+            });
+
+            // View mode buttons
+            splitViewBtn.addEventListener('click', () => setView('split'));
+            codeViewBtn.addEventListener('click', () => setView('code'));
+            previewViewBtn.addEventListener('click', () => setView('preview'));
+
+            // Snippets menu
+            snippetsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                snippetsMenu.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!snippetsMenu.contains(e.target) && e.target !== snippetsBtn) {
+                    snippetsMenu.classList.remove('active');
+                }
+            });
+
+            // Snippet items
+            document.querySelectorAll('.snippet-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const snippetKey = item.dataset.snippet;
+                    const snippet = snippets[snippetKey];
+                    if (snippet) {
+                        const start = codeEditor.selectionStart;
+                        const end = codeEditor.selectionEnd;
+                        codeEditor.value = codeEditor.value.substring(0, start) + snippet + codeEditor.value.substring(end);
+                        codeEditor.focus();
+                        codeEditor.selectionStart = codeEditor.selectionEnd = start + snippet.length;
+                        updateLineNumbers();
+                        updateCounts();
+                        saveHistory();
+                        runPreview();
+                    }
+                    snippetsMenu.classList.remove('active');
+                });
+            });
+
+            // Sync scroll between line numbers and code
+            codeEditor.addEventListener('scroll', () => {
+                lineNumbers.scrollTop = codeEditor.scrollTop;
+            });
+
+            // Initialize resizer
+            initResizer();
+
+            // Initialize
+            init();
+        })();
+    </script>
+</body>
+</html>
